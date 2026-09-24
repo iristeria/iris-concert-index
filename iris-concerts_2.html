@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Iris Live — A Wall of Every Concert</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Bebas+Neue&family=Permanent+Marker&family=Archivo:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b090d; --bg2:#151019; --wall:#0e0b12; --line:#2c2233;
+    --ink:#f3efe6; --muted:#a89eb2; --neon:#ff1f5e; --neon2:#7b3ff2; --neon3:#d7ff36;
+    --hot:#ff1f5e; --volt:#7b3ff2; --acid:#d7ff36; --ice:#22d3ee; --paper:#efe7d6;
+    --disp:'Anton',sans-serif; --black:'Archivo Black',sans-serif; --cond:'Bebas Neue',sans-serif;
+    --marker:'Permanent Marker',cursive;
+    --body:'Space Grotesk',sans-serif; --body2:'Archivo',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:
+      radial-gradient(85% 55% at 50% -5%, #2a0a1f 0%, transparent 55%),
+      radial-gradient(65% 45% at 100% 0%, #1a0a2e 0%, transparent 50%),
+      var(--bg);
+    color:var(--ink);font-family:var(--body);min-height:100vh;overflow-x:hidden;padding-bottom:120px;
+  }
+  body::before{ /* halftone + xerox grain */
+    content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.6;
+    background-image:
+      radial-gradient(rgba(255,255,255,.04) 1px, transparent 1.4px),
+      repeating-linear-gradient(0deg, rgba(0,0,0,.10) 0 2px, transparent 2px 3px);
+    background-size:6px 6px, auto;
+  }
+  body::after{ /* faint diagonal stage-light streaks */
+    content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5;mix-blend-mode:screen;
+    background:
+      linear-gradient(115deg, transparent 40%, rgba(255,31,94,.05) 50%, transparent 60%),
+      linear-gradient(60deg, transparent 45%, rgba(123,63,242,.05) 55%, transparent 65%);
+  }
+
+  /* rising sparks */
+  .notes{position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden;}
+  .note{position:absolute;bottom:-8%;color:var(--neon2);opacity:.0;font-size:26px;will-change:transform;
+    animation:rise linear infinite;}
+  @keyframes rise{
+    0%{opacity:0;transform:translateY(0) rotate(0);}
+    12%{opacity:.55;}
+    88%{opacity:.55;}
+    100%{opacity:0;transform:translateY(-108vh) rotate(40deg);}
+  }
+
+  .hall{max-width:1240px;margin:0 auto;padding:0 30px;position:relative;z-index:3;}
+
+  /* ---------- HERO ---------- */
+  .hero{padding:64px 0 26px;position:relative;}
+  .eq{display:flex;gap:5px;align-items:flex-end;height:44px;margin-bottom:22px;}
+  .eq b{width:6px;background:linear-gradient(var(--neon),var(--neon3));border-radius:2px;animation:bounce 1s ease-in-out infinite;}
+  @keyframes bounce{0%,100%{height:8px}50%{height:44px}}
+  .kicker{font-family:var(--cond);letter-spacing:.34em;font-size:14px;color:var(--acid);}
+  .hero h1{font-family:var(--disp);font-size:clamp(58px,13vw,150px);line-height:.86;text-transform:uppercase;
+    letter-spacing:-.01em;margin-top:8px;
+    background:linear-gradient(92deg,var(--neon) 0%, var(--neon3) 45%, var(--neon2) 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 4px 18px rgba(255,31,94,.3));
+    animation:flicker 7s infinite steps(1);}
+  @keyframes flicker{0%,96%,100%{opacity:1}97%{opacity:.72}98%{opacity:1}98.6%{opacity:.6}99%{opacity:1}}
+  .scrawl{font-family:var(--marker);font-size:clamp(15px,2.4vw,22px);color:var(--hot);margin-top:14px;
+    transform:rotate(-1.4deg);text-shadow:0 2px 10px rgba(255,31,94,.3);}
+  .hero .sub{margin-top:16px;font-size:15px;color:var(--muted);max-width:560px;line-height:1.7;}
+  .hero .sub b{color:var(--ink);}
+
+  /* marquee ticker */
+  .ticker{margin:26px 0 0;border-top:2px solid var(--neon);border-bottom:2px solid var(--neon);
+    background:#14060d;overflow:hidden;white-space:nowrap;transform:rotate(-.6deg);}
+  .ticker .track{display:inline-block;padding:8px 0;font-family:var(--cond);letter-spacing:.1em;font-size:16px;
+    color:var(--neon3);animation:scroll 55s linear infinite;}
+  .ticker:hover .track{animation-play-state:paused;}
+  .ticker .track span{padding:0 14px;}
+  .ticker .track i{color:var(--neon2);font-style:normal;}
+  @keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+  /* ---------- STATS ---------- */
+  .stats{display:flex;flex-wrap:wrap;gap:12px;margin:40px 0 26px;}
+  .stat{flex:1 1 140px;border:1px solid var(--line);border-radius:12px;padding:18px 20px;
+    background:linear-gradient(180deg,rgba(255,45,107,.06),rgba(0,229,255,.03));}
+  .stat b{font-family:var(--black);font-size:34px;display:block;line-height:1;
+    background:linear-gradient(120deg,var(--neon),var(--neon2));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .stat span{font-family:var(--cond);letter-spacing:.16em;font-size:13px;color:var(--muted);display:block;margin-top:8px;}
+
+  /* ---------- CONTROLS ---------- */
+  .controls{display:flex;flex-direction:column;gap:11px;align-items:flex-start;margin-bottom:34px;}
+  .chiprow{display:flex;flex-wrap:wrap;gap:9px;align-items:center;}
+  .chiplabel{font-family:var(--marker);font-size:14px;color:var(--muted);margin-right:6px;transform:rotate(-2deg);}
+  .chip{font-family:var(--cond);letter-spacing:.12em;font-size:15px;text-transform:uppercase;
+    background:transparent;border:1.5px solid var(--line);color:var(--muted);border-radius:999px;
+    padding:8px 16px;cursor:pointer;transition:all .18s ease;}
+  .chip:hover{color:var(--ink);border-color:var(--hot);}
+  .chip.on{background:var(--neon);border-color:var(--neon);color:#fff;box-shadow:0 0 18px rgba(255,31,94,.45);}
+  .chip.fam:hover{border-color:var(--fc);color:var(--fc);}
+  .chip.fam.on{background:var(--fc);border-color:var(--fc);color:#0a0a0f;box-shadow:0 0 18px color-mix(in srgb,var(--fc) 45%, transparent);}
+  .chip .n{opacity:.6;font-size:12px;margin-left:4px;}
+  .sort{display:flex;gap:8px;align-items:center;}
+  .sort button{font-family:var(--cond);letter-spacing:.12em;font-size:14px;background:transparent;
+    border:1.5px solid var(--line);color:var(--muted);border-radius:999px;padding:8px 16px;cursor:pointer;transition:all .18s;}
+  .sort button.on{border-color:var(--acid);color:var(--acid);}
+
+  /* ---------- POSTER WALL ---------- */
+  .wall{display:grid;grid-template-columns:repeat(auto-fill,minmax(228px,1fr));gap:30px 24px;}
+  .pin-wrap{display:flex;flex-direction:column;align-items:center;animation:drop .6s cubic-bezier(.2,.8,.3,1.1) both;animation-delay:var(--d,0s);}
+  @keyframes drop{from{opacity:0;transform:translateY(-24px) rotate(var(--rot,0deg));}to{opacity:1;transform:rotate(var(--rot,0deg));}}
+  .pin{width:14px;height:14px;border-radius:50%;margin-bottom:-7px;z-index:6;position:relative;
+    background:radial-gradient(circle at 35% 30%, #fff, var(--neon) 55%, #7c0026);
+    box-shadow:0 3px 6px rgba(0,0,0,.6);}
+
+  .poster{
+    position:relative;width:100%;aspect-ratio:3/4;border-radius:4px;overflow:hidden;cursor:pointer;outline:none;
+    color:#fff;display:flex;flex-direction:column;
+    background:var(--c2);
+    border:1px solid rgba(255,255,255,.10);
+    box-shadow:0 16px 30px rgba(0,0,0,.55);
+    transform:rotate(var(--rot,0deg));transition:transform .35s cubic-bezier(.2,.8,.3,1.3), box-shadow .35s ease;
+  }
+  .poster:hover,.poster:focus-visible{transform:rotate(0deg) scale(1.05);box-shadow:0 30px 60px rgba(0,0,0,.7), 0 0 40px rgba(255,45,107,.25);z-index:8;}
+  .poster::before{content:'';position:absolute;inset:5px;z-index:6;pointer-events:none;border:1px solid rgba(255,255,255,.14);border-radius:2px;}
+
+  /* ---- ART PANEL (real photo, or generative visual) ---- */
+  .p-art{position:relative;flex:0 0 60%;overflow:hidden;
+    background:
+      radial-gradient(120% 90% at 50% 0%, rgba(255,255,255,.16), transparent 55%),
+      linear-gradient(160deg, var(--c2), #05050a);}
+  .p-art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;}
+  .p-gen{position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  .p-gen .glow{position:absolute;width:150%;aspect-ratio:1;border-radius:50%;top:-58%;
+    background:radial-gradient(circle, var(--c1), transparent 62%);opacity:.55;}
+  .p-gen .mono{position:relative;z-index:2;font-family:var(--black);font-size:66px;letter-spacing:-.02em;
+    color:transparent;-webkit-text-stroke:2px rgba(255,255,255,.62);opacity:.9;}
+  .p-gen .wave{position:absolute;bottom:16px;left:0;right:0;height:26px;z-index:2;display:flex;align-items:flex-end;
+    justify-content:center;gap:3px;opacity:.85;}
+  .p-gen .wave i{width:4px;background:var(--c1);border-radius:2px;}
+  .p-grain{position:absolute;inset:0;z-index:3;pointer-events:none;mix-blend-mode:overlay;opacity:.3;
+    background-image:radial-gradient(rgba(255,255,255,.5) .5px, transparent .6px);background-size:3px 3px;}
+  .p-art .scrim{position:absolute;inset:0;z-index:3;pointer-events:none;
+    background:linear-gradient(180deg, rgba(0,0,0,.32) 0%, transparent 30%, transparent 55%, rgba(0,0,0,.85) 100%);}
+  .p-badge{position:absolute;top:10px;left:10px;z-index:5;display:flex;align-items:center;gap:5px;
+    background:var(--c1);color:#0a0a0f;font-family:var(--cond);letter-spacing:.14em;font-size:11px;padding:3px 9px;border-radius:2px;}
+  .p-date{position:absolute;top:10px;right:10px;z-index:5;font-family:var(--cond);letter-spacing:.1em;font-size:11px;
+    color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.9);}
+  .p-genre{position:absolute;top:36px;left:10px;z-index:5;font-family:var(--cond);letter-spacing:.14em;font-size:11px;
+    color:#0a0a0f;background:var(--g,#d7ff36);padding:2px 9px;border-radius:2px;transform:rotate(-3deg);
+    box-shadow:0 2px 6px rgba(0,0,0,.4);}
+  .p-halftone{position:absolute;inset:0;z-index:2;pointer-events:none;mix-blend-mode:soft-light;opacity:.5;
+    background-image:radial-gradient(rgba(0,0,0,.6) 30%, transparent 32%);background-size:5px 5px;}
+  .tape{position:absolute;width:56px;height:19px;z-index:8;background:rgba(240,231,214,.42);
+    border:1px dashed rgba(255,255,255,.25);box-shadow:0 1px 4px rgba(0,0,0,.35);backdrop-filter:blur(1px);}
+  .tape.tl{top:-8px;left:-14px;transform:rotate(-34deg);}
+  .tape.br{bottom:-8px;right:-14px;transform:rotate(-34deg);}
+  .p-artist{position:absolute;left:12px;right:12px;bottom:11px;z-index:5;
+    font-family:var(--disp);text-transform:uppercase;line-height:.92;letter-spacing:.005em;
+    font-size:clamp(19px,3.9vw,29px);color:#fff;word-break:break-word;text-shadow:0 2px 10px rgba(0,0,0,.85);}
+
+  /* ---- META PANEL ---- */
+  .p-meta{position:relative;z-index:4;flex:1;display:flex;flex-direction:column;justify-content:center;gap:7px;
+    padding:12px 14px;border-top:2px solid var(--c1);}
+  .p-tour{font-family:var(--body);font-style:italic;font-size:12.5px;line-height:1.3;color:rgba(255,255,255,.9);}
+  .p-metarow{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-top:2px;}
+  .p-venue{font-family:var(--cond);letter-spacing:.05em;font-size:13px;color:#fff;line-height:1.15;}
+  .p-city{font-family:var(--cond);letter-spacing:.13em;font-size:11px;color:var(--c3);margin-top:3px;}
+  .p-year{font-family:var(--black);font-size:20px;line-height:1;color:var(--c1);flex:0 0 auto;}
+  .p-photobtn{position:absolute;bottom:9px;right:10px;z-index:5;width:26px;height:26px;border-radius:50%;
+    background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.35);color:#fff;font-size:13px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s,background .2s;}
+  .p-art:hover .p-photobtn{opacity:1;}
+  .p-photobtn:hover{background:var(--neon);border-color:var(--neon);}
+  .p-upcoming{position:absolute;top:14px;left:-30px;z-index:7;transform:rotate(-45deg);
+    background:var(--neon3);color:#111;font-family:var(--cond);letter-spacing:.18em;font-size:11px;padding:3px 34px;box-shadow:0 2px 8px rgba(0,0,0,.4);}
+
+  /* ---------- POSTER MODAL ---------- */
+  .overlay{position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;padding:22px;
+    background:radial-gradient(circle at 50% 30%, rgba(10,10,20,.85), rgba(2,2,5,.96));backdrop-filter:blur(4px);}
+  .overlay.open{display:flex;animation:fade .28s ease;}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .modal{display:flex;gap:0;flex-wrap:wrap;width:min(760px,96vw);max-height:92vh;overflow:hidden;border-radius:8px;
+    background:var(--bg2);border:1px solid var(--line);box-shadow:0 40px 90px rgba(0,0,0,.75);animation:pop .5s cubic-bezier(.2,.9,.3,1.3);}
+  @keyframes pop{from{opacity:0;transform:scale(.82) translateY(30px);}to{opacity:1;transform:none;}}
+  .modal .poster{width:300px;max-width:42vw;aspect-ratio:3/4;border-radius:0;cursor:default;transform:none;flex:0 0 auto;box-shadow:none;}
+  .modal .poster:hover{transform:none;box-shadow:none;}
+  .modal .poster .p-artist{font-size:clamp(26px,3.4vw,40px);}
+  .m-info{flex:1 1 300px;min-width:250px;padding:26px 26px 30px;position:relative;overflow-y:auto;}
+  .m-info .close{position:absolute;top:14px;right:16px;width:34px;height:34px;border-radius:50%;cursor:pointer;
+    background:transparent;border:1px solid var(--line);color:var(--muted);font-size:16px;transition:all .2s;}
+  .m-info .close:hover{border-color:var(--neon);color:var(--neon);}
+  .m-num{font-family:var(--cond);letter-spacing:.18em;font-size:13px;color:var(--neon2);}
+  .m-artist{font-family:var(--disp);text-transform:uppercase;font-size:clamp(30px,5vw,46px);line-height:.92;margin-top:6px;}
+  .m-tour{font-style:italic;color:var(--neon3);font-size:16px;margin-top:8px;font-family:var(--body);}
+  .m-genre{display:inline-block;margin-top:12px;font-family:var(--cond);letter-spacing:.14em;font-size:12px;
+    color:#0a0a0f;background:var(--g,#d7ff36);padding:3px 12px;border-radius:2px;transform:rotate(-2deg);}
+  .m-setlist{margin-top:18px;padding:16px 18px;border:1px solid var(--line);border-radius:8px;background:rgba(0,0,0,.22);}
+  .m-sl-head{font-family:var(--cond);letter-spacing:.16em;font-size:13px;color:var(--neon3);margin-bottom:10px;}
+  .m-setlist ol{margin:0;padding-left:26px;columns:2;column-gap:22px;}
+  .m-setlist li{font-size:12.5px;line-height:1.7;color:var(--ink);break-inside:avoid;padding-right:6px;}
+  @media (max-width:560px){ .m-setlist ol{columns:1;} }
+  .m-rows{margin-top:22px;display:flex;flex-direction:column;gap:0;}
+  .m-row{display:flex;gap:14px;padding:11px 0;border-top:1px solid var(--line);font-size:14px;}
+  .m-row:last-child{border-bottom:1px solid var(--line);}
+  .m-row .k{font-family:var(--cond);letter-spacing:.14em;font-size:12px;color:var(--muted);width:96px;flex:0 0 auto;padding-top:2px;}
+  .m-row .v{color:var(--ink);line-height:1.5;}
+  .m-note{margin-top:18px;padding:14px 16px;border-left:3px solid var(--neon);background:rgba(255,45,107,.07);
+    font-size:13px;line-height:1.6;color:var(--muted);border-radius:0 6px 6px 0;}
+  .m-photo{margin-top:20px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+  .m-photobtn{font-family:var(--cond);letter-spacing:.1em;font-size:14px;background:var(--neon);color:#fff;
+    border:1px solid var(--neon);border-radius:999px;padding:9px 18px;cursor:pointer;transition:all .2s;}
+  .m-photobtn:hover{filter:brightness(1.12);}
+  .m-photobtn.ghost{background:transparent;color:var(--muted);border-color:var(--line);}
+  .m-photobtn.ghost:hover{color:var(--neon);border-color:var(--neon);filter:none;}
+  .m-photohint{flex-basis:100%;font-size:11.5px;color:var(--muted);line-height:1.5;margin-top:2px;}
+  @media (max-width:560px){
+    .modal .poster{width:100%;max-width:none;}
+    .wall{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:22px 14px;}
+  }
+
+  .footer{margin-top:70px;padding-top:28px;border-top:1px solid var(--line);
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;align-items:center;}
+  .footer .sig{font-family:var(--disp);text-transform:uppercase;font-size:22px;color:var(--neon);}
+  .footer .meta{font-family:var(--cond);letter-spacing:.14em;font-size:13px;color:var(--muted);text-align:right;}
+
+  @media (prefers-reduced-motion: reduce){
+    .eq b,.note,.ticker .track,.pin-wrap{animation:none!important;}
+    .notes{display:none;} .poster{transition:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="notes" id="notes" aria-hidden="true"></div>
+
+<div class="overlay" id="overlay" aria-hidden="true"></div>
+
+<div class="hall">
+
+  <header class="hero">
+    <div class="eq" id="eq" aria-hidden="true"></div>
+    <div class="kicker">✷ Iris Cheng · Live Music Diary ✷</div>
+    <h1>Iris Live</h1>
+    <div class="scrawl">pop-punk heart, front-row soul ⚡ every gig I've screamed along to</div>
+    <p class="sub">A wall of <b>every concert I&rsquo;ve been to</b> — from a stadium in Taipei in 2005 to arenas and fields across the UK, and one very long-awaited night still to come. Tap any poster for the full story — and add your own photo or ticket to it.</p>
+    <div class="ticker"><div class="track" id="ticker"></div></div>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><b id="stShows">0</b><span>Concerts</span></div>
+    <div class="stat"><b id="stArtists">0</b><span>Artists</span></div>
+    <div class="stat"><b id="stCities">0</b><span>Cities</span></div>
+    <div class="stat"><b id="stCountries">0</b><span>Countries</span></div>
+    <div class="stat"><b id="stYears">0</b><span>Years of gigs</span></div>
+  </div>
+
+  <div class="controls" id="controls">
+    <div class="sort" id="sort">
+      <button data-s="new" class="on">↓ Newest</button>
+      <button data-s="old">↑ Oldest</button>
+    </div>
+  </div>
+
+  <main class="wall" id="wall"></main>
+
+  <footer class="footer">
+    <div class="sig">Encore!</div>
+    <div class="meta">Updated Sept 2026 · The gig list is never finished</div>
+  </footer>
+
+</div>
+
+<script>
+const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const TODAY = new Date('2026-09-23');
+
+const concerts = [
+  { n:1, date:'2027-04-06', artist:'Olivia Rodrigo', venue:'The O2 Arena', city:'London', country:'UK', tour:'The Unraveled Tour', notes:'' },
+  { n:2, date:'2026-09-16', artist:'Baby Smith', venue:'Sebright Arms', city:'London', country:'UK', tour:'First UK headline tour', notes:'' },
+  { n:3, date:'2026-09-15', artist:'Hilary Duff', venue:'The O2 Arena', city:'London', country:'UK', tour:'The Lucky Me Tour', notes:'Support: La Roux' },
+  { n:4, date:'2026-07-21', artist:'Vanessa Carlton', venue:'Islington Assembly Hall', city:'London', country:'UK', tour:'The Veils Tour', notes:'' },
+  { n:5, date:'2026-07-04', artist:'My Chemical Romance', venue:'Bellahouston Park', city:'Glasgow', country:'UK', tour:'Long Live The Black Parade Tour', notes:'Glasgow Summer Sessions' },
+  { n:6, date:'2025-12-07', artist:'Wolf Alice', venue:'OVO Hydro', city:'Glasgow', country:'UK', tour:'The Clearing Tour', notes:'' },
+  { n:7, date:'2025-08-26', artist:'Chappell Roan', venue:'Royal Highland Centre', city:'Edinburgh', country:'UK', tour:'Visions of Damsels & Other Dangerous Things Tour', notes:'Edinburgh Summer Sessions' },
+  { n:8, date:'2025-05-23', artist:'Wet Leg', venue:'O2 Academy Brixton', city:'London', country:'UK', tour:'moisturizer UK tour', notes:'' },
+  { n:9, date:'2024-10-24', artist:'Master Boot Record', venue:'Cathouse Rock Club', city:'Glasgow', country:'UK', tour:'European Fall Tour 2024', notes:'' },
+  { n:10, date:'2024-10-18', artist:'Keane', venue:'OVO Hydro', city:'Glasgow', country:'UK', tour:'Hopes and Fears 20th Anniversary Tour', notes:'' },
+  { n:11, date:'2024-08-27', artist:'Yo La Tengo', venue:'SWG3 Galvanizers', city:'Glasgow', country:'UK', tour:'This Stupid World Tour', notes:'' },
+  { n:12, date:'2022-04-20', artist:'Madison Beer', venue:'O2 Academy Glasgow', city:'Glasgow', country:'UK', tour:'The Life Support Tour', notes:'Support: Leah Kate', setlist:['Baby','Good in Goodbye','Stay Numb and Carry On','Emotional Bruises','Reckless','Homesick','Stained Glass','Default','Effortlessly','Selfish','Interlude','Blue','Sour Times (Portishead cover)','Dear Society','BOYSHIT','Follow the White Rabbit','Everything Happens for a Reason'] },
+  { n:13, date:'2024-02-10', artist:'Simple Plan', venue:'O2 Academy Glasgow', city:'Glasgow', country:'UK', tour:'Hard As Rock Tour', notes:'With Mayday Parade and State Champs' },
+  { n:14, date:'2023-11-27', artist:'Ludacris', venue:'Private event (venue TBC)', city:'Las Vegas', country:'USA', tour:'Private show during AWS re:Invent 2023', notes:'re:Invent ran 27 Nov to 1 Dec 2023; exact night and venue TBC.' },
+  { n:15, date:'2023-10-21', artist:'Royal Blood', venue:'Usher Hall', city:'Edinburgh', country:'UK', tour:'Back to the Water Below Tour', notes:'' },
+  { n:16, date:'2023-10-01', artist:'Busted', venue:'OVO Hydro', city:'Glasgow', country:'UK', tour:'Greatest Hits Tour (20th anniversary)', notes:'Support: Hanson' },
+  { n:17, date:'2023-06-27', artist:"Guns N' Roses", venue:'Bellahouston Park', city:'Glasgow', country:'UK', tour:"Guns N' Roses 2023 Tour", notes:'' },
+  { n:18, date:'2023-06-26', artist:'Iron Maiden', venue:'OVO Hydro', city:'Glasgow', country:'UK', tour:'The Future Past Tour', notes:'' },
+  { n:19, date:'2023-06-23', artist:'Muse', venue:'Bellahouston Park', city:'Glasgow', country:'UK', tour:'Will of the People World Tour', notes:'' },
+  { n:20, date:'2023-03-04', artist:'Bullet for My Valentine', venue:'Barrowland Ballroom', city:'Glasgow', country:'UK', tour:'UK & Europe 2023 Tour', notes:'' },
+  { n:21, date:'2023-02-19', artist:'Dream Theater', venue:'SEC Armadillo', city:'Glasgow', country:'UK', tour:'Top of the World Tour', notes:'' },
+  { n:22, date:'2022-11-21', artist:'Ingrid Michaelson', venue:'Union Chapel', city:'London', country:'UK', tour:'Holiday show', notes:'No official tour name.' },
+  { n:23, date:'2022-11-17', artist:'Evanescence', venue:'OVO Hydro', city:'Glasgow', country:'UK', tour:'Worlds Collide Tour', notes:'Co-headline with Within Temptation' },
+  { n:24, date:'2022-10-31', artist:'Skid Row', venue:'O2 Academy Glasgow', city:'Glasgow', country:'UK', tour:'Live to Rock 2022 UK Tour', notes:"With Enuff Z'Nuff" },
+  { n:25, date:'2022-09-18', artist:'Three Days Grace', venue:'SWG3 Galvanizers', city:'Glasgow', country:'UK', tour:'Explosions Tour', notes:'' },
+  { n:26, date:'2022-02-16', artist:'Wolf Alice', venue:'Barrowland Ballroom', city:'Glasgow', country:'UK', tour:'Blue Weekend Tour', notes:'' },
+  { n:27, date:'2013-06-13', artist:'Norwegian Wood Festival', venue:'Frognerbadet', city:'Oslo', country:'Norway', tour:'Norwegian Wood 2013', notes:'Festival ran 13–16 Jun 2013; lineup incl. Rod Stewart, Nick Cave & the Bad Seeds, Keane, Band of Horses, Noah and the Whale. Day attended TBC.' },
+  { n:28, date:'2011-07-03', artist:'Kylie Minogue', venue:'TWTC Nangang Exhibition Hall', city:'Taipei', country:'Taiwan', tour:'Aphrodite: Les Folies Tour', notes:'' },
+  { n:29, date:'2009-05-30', artist:'X Japan', venue:'Banqiao Stadium', city:'New Taipei', country:'Taiwan', tour:'X Japan World Tour Live in Taipei', notes:'' },
+  { n:30, date:'2008-09-05', artist:'Avril Lavigne', venue:'Nangang Exhibition Hall', city:'Taipei', country:'Taiwan', tour:'The Best Damn Tour', notes:'' },
+  { n:31, date:'2007-11-23', artist:'Mai Kuraki', venue:'National Taiwan University Sports Center', city:'Taipei', country:'Taiwan', tour:'2007 ~First Live in Taiwan~', notes:'Her first solo overseas concert.' },
+  { n:32, date:'2005-03-29', artist:'Avril Lavigne', venue:'Taipei Municipal Stadium', city:'Taipei', country:'Taiwan', tour:'Bonez Tour', notes:'' },
+];
+
+const FLAG = { UK:'🇬🇧', USA:'🇺🇸', Norway:'🇳🇴' };
+
+const palettes = [
+  ['#ff1f5e','#12030a','#ff9ec4'],
+  ['#7b3ff2','#0c0618','#c9a7ff'],
+  ['#ff2d6b','#120310','#d7ff36'],
+  ['#22d3ee','#04121a','#ff1f5e'],
+  ['#ff5470','#160406','#ffd23f'],
+  ['#b026ff','#0a0618','#ff1f5e'],
+  ['#ff1f5e','#0b0b12','#7b3ff2'],
+  ['#e63946','#120306','#ffd23f'],
+  ['#00c2ff','#050f16','#d7ff36'],
+  ['#ff7ac6','#140611','#7b3ff2'],
+  ['#ff8a3d','#160800','#ff1f5e'],
+  ['#d7ff36','#0e1206','#ff1f5e'],
+];
+function hash(s){ let h=0; for(let i=0;i<s.length;i++) h=(h*31 + s.charCodeAt(i))>>>0; return h; }
+
+/* ---------- GENRE (customised to a pop-rock listener) ---------- */
+const GENRE = {
+  'Olivia Rodrigo':['Pop-Rock','Pop-Punk'], 'Baby Smith':['Indie','Indie'],
+  'Hilary Duff':['Pop','Pop'], 'Vanessa Carlton':['Pop','Pop'],
+  'My Chemical Romance':['Emo','Pop-Punk'], 'Wolf Alice':['Alt-Rock','Alt-Rock'],
+  'Chappell Roan':['Pop','Pop'], 'Wet Leg':['Indie Rock','Indie'],
+  'Master Boot Record':['Synth-Metal','Metal'], 'Keane':['Alt-Rock','Alt-Rock'],
+  'Yo La Tengo':['Indie Rock','Indie'], 'Madison Beer':['Pop','Pop'],
+  'Simple Plan':['Pop-Punk','Pop-Punk'], 'Ludacris':['Hip-Hop','Other'],
+  'Royal Blood':['Hard Rock','Rock'], 'Busted':['Pop-Punk','Pop-Punk'],
+  "Guns N' Roses":['Hard Rock','Rock'], 'Iron Maiden':['Metal','Metal'],
+  'Muse':['Alt-Rock','Alt-Rock'], 'Bullet for My Valentine':['Metalcore','Metal'],
+  'Dream Theater':['Prog Metal','Metal'], 'Ingrid Michaelson':['Indie Pop','Pop'],
+  'Evanescence':['Gothic Rock','Rock'], 'Skid Row':['Hard Rock','Rock'],
+  'Three Days Grace':['Alt-Rock','Alt-Rock'], 'Norwegian Wood Festival':['Festival','Other'],
+  'Kylie Minogue':['Pop','Pop'], 'X Japan':['Metal','Metal'],
+  'Avril Lavigne':['Pop-Punk','Pop-Punk'], 'Mai Kuraki':['J-Pop','Pop'],
+};
+const FAM_COLOR = { 'Pop-Punk':'#ff1f5e','Alt-Rock':'#7b3ff2','Metal':'#ff3b3b','Rock':'#ff8a3d','Pop':'#ff7ac6','Indie':'#22d3ee','Other':'#d7ff36' };
+function genreOf(c){ const g = GENRE[c.artist] || ['Live','Other']; return { label:g[0], fam:g[1], color:FAM_COLOR[g[1]] || '#d7ff36' }; }
+const SHAPES = ['circle','band','block','ring'];
+
+
+function fmtShort(iso){ const d=new Date(iso); const dd=String(d.getUTCDate()).padStart(2,'0');
+  const mm=String(d.getUTCMonth()+1).padStart(2,'0'); return `${dd}.${mm}.${d.getUTCFullYear()}`; }
+function fmtLong(iso){ const d=new Date(iso);
+  return d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}); }
+
+/* ---------- USER IMAGE STORE (own photos / tickets — persists locally) ---------- */
+const IMG_KEY = 'irisLive.images.v1';
+let userImgs = {};
+try { userImgs = JSON.parse(localStorage.getItem(IMG_KEY) || '{}'); } catch(e){ userImgs = {}; }
+function saveImgs(){ try { localStorage.setItem(IMG_KEY, JSON.stringify(userImgs)); } catch(e){ alert('Could not save the image — it may be too large, or storage is full.'); } }
+function imgFor(c){ return userImgs[c.n] || c.img || ''; }
+
+function getInitials(name){
+  const words = name.replace(/[^A-Za-z0-9 ]/g,' ').split(/\s+/).filter(Boolean);
+  if(!words.length) return '★';
+  if(words.length === 1) return words[0].slice(0,2).toUpperCase();
+  return (words[0][0] + words[1][0]).toUpperCase();
+}
+function waveBars(seed){
+  let h = seed, out = '';
+  for(let i=0;i<13;i++){ h = (h*1103515245 + 12345) & 0x7fffffff; const ht = 6 + (h % 22); out += `<i style="height:${ht}px"></i>`; }
+  return out;
+}
+
+function posterHTML(c){
+  const pal = palettes[hash(c.artist + c.tour) % palettes.length];
+  const upcoming = new Date(c.date) > TODAY;
+  const flag = FLAG[c.country] || '';
+  const yr = c.date.slice(0,4);
+  const g = genreOf(c);
+  const img = imgFor(c);
+  const art = img
+    ? `<img src="${img}" alt="${c.artist}">`
+    : `<div class="p-gen"><div class="glow"></div><div class="mono">${getInitials(c.artist)}</div><div class="wave">${waveBars(hash(c.artist))}</div></div>`;
+  return `
+    <div class="poster" tabindex="0" role="button" aria-label="${c.artist} — ${c.tour}"
+         style="--c1:${pal[0]};--c2:${pal[1]};--c3:${pal[2]};--rot:0deg;">
+      <span class="tape tl"></span><span class="tape br"></span>
+      ${upcoming ? '<div class="p-upcoming">Upcoming</div>' : ''}
+      <div class="p-art">
+        ${art}
+        <div class="p-halftone"></div>
+        <div class="p-grain"></div>
+        <div class="scrim"></div>
+        <div class="p-badge">${flag ? flag + ' ' : ''}★ Live</div>
+        <div class="p-date">${fmtShort(c.date)}</div>
+        <div class="p-genre" style="--g:${g.color}">${g.label}</div>
+        <div class="p-artist">${c.artist}</div>
+        <button class="p-photobtn" data-photo="${c.n}" title="${img ? 'Change photo' : 'Add your photo'}">${img ? '⟳' : '＋'}</button>
+      </div>
+      <div class="p-meta">
+        <div class="p-tour">${c.tour}</div>
+        <div class="p-metarow">
+          <div class="pl">
+            <div class="p-venue">${c.venue}</div>
+            <div class="p-city">${c.city} · ${c.country}</div>
+          </div>
+          <div class="p-year">${yr}</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+/* ---------- IMAGE UPLOAD (resize + store) ---------- */
+let pendingImgN = null;
+const imgInput = document.createElement('input');
+imgInput.type = 'file'; imgInput.accept = 'image/*'; imgInput.style.display = 'none';
+document.body.appendChild(imgInput);
+function pickImage(n){ pendingImgN = n; imgInput.value = ''; imgInput.click(); }
+imgInput.addEventListener('change', () => {
+  const file = imgInput.files && imgInput.files[0];
+  if(!file || pendingImgN == null) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const im = new Image();
+    im.onload = () => {
+      const max = 760;
+      let w = im.width, h = im.height;
+      if(w > h && w > max){ h = Math.round(h * max / w); w = max; }
+      else if(h >= w && h > max){ w = Math.round(w * max / h); h = max; }
+      const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+      cv.getContext('2d').drawImage(im, 0, 0, w, h);
+      userImgs[pendingImgN] = cv.toDataURL('image/jpeg', 0.82);
+      saveImgs();
+      const cc = concerts.find(x => x.n === pendingImgN);
+      render();
+      if(cc) openModal(cc);
+    };
+    im.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+function removeImage(n){ delete userImgs[n]; saveImgs(); render(); const cc = concerts.find(x=>x.n===n); if(cc) openModal(cc); }
+
+const wall = document.getElementById('wall');
+const rots = [-1.4,1.2,-0.9,1.5,-1.2,0.8,-1.5,1.0,-0.7,1.3,-1.1,0.9];
+let sortDir = 'new';
+let filterKind = 'all';   /* 'all' | 'city' | 'fam' */
+let filterVal = 'all';
+
+function currentList(){
+  let list = concerts.filter(c => {
+    if(filterKind === 'all') return true;
+    if(filterKind === 'city') return c.city === filterVal;
+    if(filterKind === 'fam') return genreOf(c).fam === filterVal;
+    return true;
+  });
+  list.sort((a,b)=> sortDir==='new' ? new Date(b.date)-new Date(a.date) : new Date(a.date)-new Date(b.date));
+  return list;
+}
+
+function render(){
+  const list = currentList();
+  wall.innerHTML = '';
+  list.forEach((c, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'pin-wrap';
+    wrap.style.setProperty('--rot', rots[i % rots.length] + 'deg');
+    wrap.style.setProperty('--d', reduceMotion ? '0s' : Math.min(i*0.03, 1.1) + 's');
+    wrap.innerHTML = `<div class="pin"></div>${posterHTML(c)}`;
+    const poster = wrap.querySelector('.poster');
+    poster.addEventListener('click', () => openModal(c));
+    poster.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openModal(c); } });
+    const pb = poster.querySelector('.p-photobtn');
+    if(pb) pb.addEventListener('click', e => { e.stopPropagation(); pickImage(c.n); });
+    wall.appendChild(wrap);
+  });
+}
+
+/* ---------- MODAL ---------- */
+const overlay = document.getElementById('overlay');
+function openModal(c){
+  const upcoming = new Date(c.date) > TODAY;
+  const hasImg = !!imgFor(c);
+  const g = genreOf(c);
+  const setlist = (c.setlist && c.setlist.length)
+    ? `<div class="m-setlist"><div class="m-sl-head">Setlist · ${c.setlist.length} songs</div><ol>${c.setlist.map(s=>`<li>${s}</li>`).join('')}</ol></div>`
+    : '';
+  overlay.innerHTML = `
+    <div class="modal">
+      ${posterHTML(c).replace('style="--c1', 'style="--rot:0deg;--c1')}
+      <div class="m-info">
+        <button class="close" aria-label="Close">✕</button>
+        <div class="m-num">${FLAG[c.country]||''} Concert No. ${c.n} of ${concerts.length}${upcoming ? ' · Upcoming' : ''}</div>
+        <div class="m-artist">${c.artist}</div>
+        <div class="m-tour">${c.tour}</div>
+        <div class="m-genre" style="--g:${g.color}">${g.label}</div>
+        <div class="m-rows">
+          <div class="m-row"><span class="k">Date</span><span class="v">${fmtLong(c.date)}</span></div>
+          <div class="m-row"><span class="k">Venue</span><span class="v">${c.venue}</span></div>
+          <div class="m-row"><span class="k">City</span><span class="v">${c.city}, ${c.country}</span></div>
+        </div>
+        ${c.notes ? `<div class="m-note">${c.notes}</div>` : ''}
+        ${setlist}
+        <div class="m-photo">
+          <button class="m-photobtn" data-add="${c.n}">${hasImg ? '⟳ Change photo' : '＋ Add your photo / ticket'}</button>
+          ${hasImg ? `<button class="m-photobtn ghost" data-remove="${c.n}">Remove</button>` : ''}
+          <div class="m-photohint">Your own photo of the night, ticket stub, or artwork you have the rights to. Saved on this device.</div>
+        </div>
+      </div>
+    </div>`;
+  overlay.classList.add('open');
+  overlay.querySelector('.close').addEventListener('click', closeModal);
+  const mp = overlay.querySelector('.modal .poster .p-photobtn');
+  if(mp) mp.addEventListener('click', e => { e.stopPropagation(); pickImage(c.n); });
+  const addB = overlay.querySelector('[data-add]');
+  if(addB) addB.addEventListener('click', () => pickImage(c.n));
+  const remB = overlay.querySelector('[data-remove]');
+  if(remB) remB.addEventListener('click', () => removeImage(c.n));
+}
+function closeModal(){ overlay.classList.remove('open'); overlay.innerHTML=''; }
+overlay.addEventListener('click', e => { if(e.target===overlay) closeModal(); });
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
+
+/* ---------- CONTROLS ---------- */
+function buildControls(){
+  const controls = document.getElementById('controls');
+  const sortEl = document.getElementById('sort');
+  const cityCounts = {}; concerts.forEach(c => cityCounts[c.city] = (cityCounts[c.city]||0)+1);
+  const cities = Object.keys(cityCounts).sort((a,b)=>cityCounts[b]-cityCounts[a]);
+  const famCounts = {}; concerts.forEach(c => { const f = genreOf(c).fam; famCounts[f]=(famCounts[f]||0)+1; });
+  const FAM_ORDER = ['Pop-Punk','Alt-Rock','Metal','Rock','Pop','Indie','Other'];
+
+  const mk = (label, kind, val, n, color) => {
+    const b = document.createElement('button');
+    b.className = 'chip' + (kind==='all'?' on':'') + (kind==='fam'?' fam':'');
+    if(color) b.style.setProperty('--fc', color);
+    b.innerHTML = label + (n!=null?`<span class="n">${n}</span>`:'');
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on'); filterKind = kind; filterVal = val; render();
+    });
+    return b;
+  };
+
+  const rowWhere = document.createElement('div'); rowWhere.className = 'chiprow';
+  const rowSound = document.createElement('div'); rowSound.className = 'chiprow';
+  rowWhere.appendChild(Object.assign(document.createElement('span'), {className:'chiplabel', textContent:'Where'}));
+  rowWhere.appendChild(mk('All', 'all', 'all', concerts.length));
+  cities.forEach(city => rowWhere.appendChild(mk(city, 'city', city, cityCounts[city])));
+  rowSound.appendChild(Object.assign(document.createElement('span'), {className:'chiplabel', textContent:'Sound'}));
+  FAM_ORDER.filter(f=>famCounts[f]).forEach(f => rowSound.appendChild(mk(f, 'fam', f, famCounts[f], FAM_COLOR[f])));
+
+  controls.insertBefore(rowWhere, sortEl);
+  controls.insertBefore(rowSound, sortEl);
+}
+document.querySelectorAll('#sort button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#sort button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); sortDir = b.dataset.s; render();
+}));
+
+/* ---------- STATS / EQ / NOTES / TICKER ---------- */
+function countUp(el, to){
+  if(reduceMotion){ el.textContent = to; return; }
+  let s=null,dur=1100;
+  function step(ts){ if(!s)s=ts; const p=Math.min((ts-s)/dur,1);
+    el.textContent=Math.round(to*(1-Math.pow(1-p,3))); if(p<1)requestAnimationFrame(step); else el.textContent=to; }
+  requestAnimationFrame(step);
+}
+function buildEq(){
+  const eq=document.getElementById('eq');
+  for(let i=0;i<34;i++){ const b=document.createElement('b');
+    b.style.animationDuration=(0.6+Math.random()*0.9).toFixed(2)+'s';
+    b.style.animationDelay=(Math.random()*-1).toFixed(2)+'s'; eq.appendChild(b); }
+}
+function buildNotes(){
+  if(reduceMotion) return;
+  const layer=document.getElementById('notes');
+  const glyphs=['♪','♫','♩','♬','✷','♭'];
+  for(let i=0;i<18;i++){ const s=document.createElement('span');
+    s.className='note'; s.textContent=glyphs[i%glyphs.length];
+    s.style.left=(Math.random()*100).toFixed(1)+'%';
+    s.style.fontSize=(18+Math.random()*22).toFixed(0)+'px';
+    s.style.color=['#ff2d6b','#00e5ff','#ffe14d'][i%3];
+    s.style.animationDuration=(9+Math.random()*10).toFixed(1)+'s';
+    s.style.animationDelay=(Math.random()*-16).toFixed(1)+'s';
+    layer.appendChild(s); }
+}
+function buildTicker(){
+  const parts = concerts.map(c => `<span>${c.artist} <i>— ${c.tour}</i></span>`);
+  const chunk = `<span><i>✷ IRIS LIVE ✷ ${concerts.length} SHOWS ✷ 2005–2027 ✷</i></span>` + parts.join('<span>✷</span>');
+  document.getElementById('ticker').innerHTML = chunk + chunk;
+}
+
+/* ---------- GO ---------- */
+buildControls();
+render();
+buildEq();
+buildNotes();
+buildTicker();
+
+const uniqueArtists = new Set(concerts.map(c=>c.artist)).size;
+const uniqueCities = new Set(concerts.map(c=>c.city)).size;
+const uniqueCountries = new Set(concerts.map(c=>c.country)).size;
+const years = concerts.map(c=>+c.date.slice(0,4));
+const span = Math.max(...years) - Math.min(...years);
+countUp(document.getElementById('stShows'), concerts.length);
+countUp(document.getElementById('stArtists'), uniqueArtists);
+countUp(document.getElementById('stCities'), uniqueCities);
+countUp(document.getElementById('stCountries'), uniqueCountries);
+countUp(document.getElementById('stYears'), span);
+</script>
+
+</body>
+</html>
